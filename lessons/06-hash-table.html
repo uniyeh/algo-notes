@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>雜湊表 Hash Table | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="06-hash-table" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>雜湊表 Hash Table</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解雜湊表（Hash Table）為什麼能平均 O(1) 查找。</li>
+          <li>能用 <code>unordered_map</code> / <code>unordered_set</code> 解題。</li>
+          <li>學會「邊走邊查」的配對技巧（Two Sum）。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>雜湊表把 key 透過雜湊函數換成陣列位置，查找、插入平均 O(1)。C++ 有兩組工具：<code>unordered_map</code>（無序、平均 O(1)）和 <code>map</code>（有序、O(log n)）。</p>
+<p>經典用法是 Two Sum：走到 <code>a[i]</code> 時，問「之前有沒有出現過 <code>k - a[i]</code>」，有就配對成功。</p>
+<div class="callout"><p>「需要快速回答『某個值出現過嗎／出現幾次』」→ 第一個想到雜湊表。</p></div>
+
+      <h2>範例演示</h2>
+      <p><code>a = [2, 7, 11, 15]</code>，找和為 9 的兩個索引：</p>
+<table><tr><th>i</th><th>a[i]</th><th>要找 9 − a[i]</th><th>表中有嗎？</th><th>表的內容</th></tr>
+<tr><td>0</td><td>2</td><td>7</td><td>沒有</td><td>{2:0}</td></tr>
+<tr><td>1</td><td>7</td><td>2</td><td class="hl">有，索引 0</td><td>答案 (0, 1)</td></tr></table>
+
+      <h2>程式碼</h2>
+      <h3>Two Sum 與次數統計</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    vector&lt;int&gt; a = {2, 7, 11, 15};
+    int k = 9;
+
+    unordered_map&lt;int, int&gt; seen;          // 值 -&gt; 索引
+    for (int i = 0; i &lt; (int)a.size(); i++) {
+        auto it = seen.find(k - a[i]);     // 先查再放，避免自己配自己
+        if (it != seen.end()) {
+            cout &lt;&lt; it-&gt;second &lt;&lt; ' ' &lt;&lt; i &lt;&lt; '\n';
+            break;
+        }
+        seen[a[i]] = i;
+    }
+
+    // 統計每個字母出現次數（判斷兩字串是否為重組字）
+    string s = "anagram", t = "nagaram";
+    unordered_map&lt;char, int&gt; cnt;
+    for (char c : s) cnt[c]++;
+    for (char c : t) cnt[c]--;
+    bool ok = all_of(cnt.begin(), cnt.end(), [](auto &amp;p) { return p.second == 0; });
+    cout &lt;&lt; (ok ? "YES" : "NO") &lt;&lt; '\n';
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>查找／插入（平均）</td><td>O(1)</td></tr>
+        <tr><td>查找／插入（最壞）</td><td>O(n)</td></tr>
+        <tr><td>map 版本</td><td>O(log n)</td></tr>
+        <tr><td>空間</td><td>O(n)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>用 <code>m[x]</code> 查詢</strong>：key 不存在時會自動插入 0，改變表的大小；只查詢請用 <code>find</code> 或 <code>count</code>。</li>
+          <li><strong>先放再查</strong>：會讓 <code>a[i]</code> 和自己配對，要先查再放。</li>
+          <li><strong>被卡雜湊</strong>：Codeforces 有人專門構造碰撞資料，必要時改用 <code>map</code> 或自訂雜湊。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="06-hash-table"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/two-sum/">LeetCode 1 Two Sum</a> — 本篇模板</li>
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/valid-anagram/">LeetCode 242 Valid Anagram</a> — 次數統計</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/4sum-ii/">LeetCode 454 4Sum II</a> — 兩兩分組</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>雜湊表：平均 O(1) 判斷「出現過嗎、幾次」。</li>
+          <li>Two Sum：走到 a[i] 先查 k − a[i]，再放入自己。</li>
+          <li>查詢用 <code>find</code>，不要用 <code>[]</code>。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>

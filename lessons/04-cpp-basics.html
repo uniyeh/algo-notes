@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>前序：複雜度與 C++ 競程基礎 | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="04-cpp-basics" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>前序：複雜度與 C++ 競程基礎</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解時間複雜度（Time Complexity）與「一秒 10⁸」的估算法。</li>
+          <li>能寫出競程標準開頭與快速輸入輸出。</li>
+          <li>會用 <code>vector</code>、<code>sort</code>、<code>long long</code> 等最常用工具。</li>
+          <li>知道什麼時候會溢位、怎麼避免。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>寫題目之前先問兩件事：<strong>資料有多大？</strong>、<strong>答案有多大？</strong>。前者決定演算法要多快，後者決定變數型別。</p>
+<p>C++ 一秒大約能跑 10⁸ 次簡單運算。看到 <var>n</var> ≤ 2×10⁵，就知道 O(n²) 會跑 4×10¹⁰ 次，一定超時，要找 O(n log n) 以下的做法。</p>
+<div class="callout"><p>先看資料範圍反推複雜度，再選演算法——這是所有章節的共同起點。</p></div>
+
+      <h2>範例演示</h2>
+      <p>同一題「找陣列中是否有兩數相同」，<var>n</var> = 2×10⁵：</p>
+<table><tr><th>做法</th><th>複雜度</th><th>運算次數</th><th>結果</th></tr>
+<tr><td>兩層迴圈比對</td><td>O(n²)</td><td>4×10¹⁰</td><td>TLE</td></tr>
+<tr><td>先排序再比相鄰</td><td>O(n log n)</td><td>約 3.6×10⁶</td><td class="hl">AC</td></tr>
+<tr><td>雜湊表</td><td>O(n)</td><td>2×10⁵</td><td>AC</td></tr></table>
+
+      <h2>程式碼</h2>
+      <h3>競程標準模板</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    // 關閉與 C 的同步、解除 cin/cout 綁定，大量輸入時快很多
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    int n;
+    cin &gt;&gt; n;
+    vector&lt;long long&gt; a(n);          // 值到 1e9、加總會超過 int，用 long long
+    for (auto &amp;x : a) cin &gt;&gt; x;
+
+    sort(a.begin(), a.end());        // O(n log n)
+    bool dup = false;
+    for (int i = 1; i &lt; n; i++)
+        if (a[i] == a[i - 1]) dup = true;
+
+    long long sum = accumulate(a.begin(), a.end(), 0LL);  // 0LL：讓加總用 long long
+    cout &lt;&lt; (dup ? "YES" : "NO") &lt;&lt; ' ' &lt;&lt; sum &lt;&lt; '\n'; // '\n' 比 endl 快（endl 會強制清空緩衝）
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>排序</td><td>O(n log n)</td></tr>
+        <tr><td>掃描一次</td><td>O(n)</td></tr>
+        <tr><td>空間</td><td>O(n)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>int 溢位</strong>：int 上限約 2.1×10⁹，兩個 10⁹ 相加就爆。加總、乘法一律先想 <code>long long</code>。</li>
+          <li><strong>accumulate 初值寫 0</strong>：會用 int 加總，要寫 <code>0LL</code>。</li>
+          <li><strong>大量輸出用 endl</strong>：每次都清空緩衝，可能因此 TLE。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="04-cpp-basics"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://cses.fi/problemset/task/1068">CSES 1068 Weird Algorithm</a> — 注意 long long</li>
+        <li><span class="badge easy">簡單</span><a href="https://cses.fi/problemset/task/1083">CSES 1083 Missing Number</a> — 用總和公式</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/contains-duplicate/">LeetCode 217 Contains Duplicate</a> — 排序或雜湊</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>資料範圍 → 可接受的複雜度 → 演算法。</li>
+          <li>加總與乘法預設用 <code>long long</code>。</li>
+          <li>固定使用標準模板與 <code>'\n'</code>。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>

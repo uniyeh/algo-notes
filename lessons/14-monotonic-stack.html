@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>單調堆疊 Monotonic Stack | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="14-monotonic-stack" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>單調堆疊 Monotonic Stack</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解單調堆疊（Monotonic Stack）解決「下一個更大／更小」的原理。</li>
+          <li>能寫出 O(n) 的單調堆疊模板。</li>
+          <li>知道堆疊裡存索引而不是值的好處。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>要找每個元素右邊第一個比它大的數，暴力是 O(n²)。單調堆疊的想法：堆疊裡放「還沒找到答案」的元素，並保持<strong>由底到頂遞減</strong>。新元素進來時，比它小的都找到答案了，就把它們彈出。</p>
+<div class="callout"><p>每個元素最多進出堆疊各一次，所以總共 O(n)。</p></div>
+
+      <h2>範例演示</h2>
+      <p><code>a = [2, 1, 2, 4, 3]</code>，堆疊存索引（括號內為值）：</p>
+<table><tr><th>i</th><th>a[i]</th><th>彈出（找到答案）</th><th>堆疊</th></tr>
+<tr><td>0</td><td>2</td><td>—</td><td>0(2)</td></tr>
+<tr><td>1</td><td>1</td><td>—</td><td>0(2) 1(1)</td></tr>
+<tr><td>2</td><td>2</td><td>1 → 答案 2</td><td>0(2) 2(2)</td></tr>
+<tr><td>3</td><td>4</td><td>2、0 → 答案 4</td><td>3(4)</td></tr>
+<tr><td>4</td><td>3</td><td>—</td><td>3(4) 4(3)</td></tr></table>
+<p>答案：<code>4 2 4 -1 -1</code>（堆疊剩下的都是 -1）。</p>
+
+      <h2>程式碼</h2>
+      <h3>每日溫度：還要等幾天才會更暖</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    vector&lt;int&gt; t = {73, 74, 75, 71, 69, 72, 76, 73};
+    int n = t.size();
+    vector&lt;int&gt; ans(n, 0);
+    stack&lt;int&gt; st;                      // 存索引：同時能拿到值和距離
+    for (int i = 0; i &lt; n; i++) {
+        while (!st.empty() &amp;&amp; t[st.top()] &lt; t[i]) {
+            ans[st.top()] = i - st.top();   // st.top() 等到了更暖的一天
+            st.pop();
+        }
+        st.push(i);
+    }
+    for (int x : ans) cout &lt;&lt; x &lt;&lt; ' ';
+    cout &lt;&lt; '\n';                       // 1 1 4 2 1 1 0 0
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>時間</td><td>O(n)</td></tr>
+        <tr><td>空間</td><td>O(n)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>單調方向搞反</strong>：找「下一個更大」要維持遞減堆疊；找「下一個更小」維持遞增。</li>
+          <li><strong><code>&lt;</code> 和 <code>&lt;=</code></strong>：相等時要不要彈出，決定答案是「嚴格更大」還是「大於等於」。</li>
+          <li><strong>存值不存索引</strong>：求距離或位置時會拿不到資訊，習慣存索引。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="14-monotonic-stack"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/daily-temperatures/">LeetCode 739 Daily Temperatures</a> — 本篇模板</li>
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/next-greater-element-i/">LeetCode 496 Next Greater Element I</a> — 搭配雜湊表</li>
+        <li><span class="badge hard">困難</span><a href="https://leetcode.com/problems/largest-rectangle-in-histogram/">LeetCode 84 Largest Rectangle in Histogram</a> — 左右第一個更小</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>單調堆疊：堆疊裡是還沒找到答案的元素。</li>
+          <li>新元素進來時，把被它解決的元素彈出。</li>
+          <li>存索引、注意嚴格與非嚴格比較。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>

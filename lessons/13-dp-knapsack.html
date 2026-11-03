@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>動態規劃 DP 與背包 | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="13-dp-knapsack" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>動態規劃 DP 與背包</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解動態規劃（Dynamic Programming）：把大問題拆成重疊的子問題。</li>
+          <li>能定義狀態、寫出轉移式、決定初始值與順序。</li>
+          <li>能寫出 0/1 背包的二維與一維寫法。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>DP 五步驟：<strong>定義狀態 → 轉移式 → 初始值 → 計算順序 → 答案在哪</strong>。</p>
+<p>爬樓梯：<code>dp[i]</code> = 走到第 i 階的方法數，<code>dp[i] = dp[i-1] + dp[i-2]</code>。<br>0/1 背包：<code>dp[i][c]</code> = 前 i 個物品、容量 c 的最大價值，每個物品「拿或不拿」：<code>dp[i][c] = max(dp[i-1][c], dp[i-1][c-w] + v)</code>。</p>
+<div class="callout"><p>一維背包要<strong>倒著</strong>枚舉容量，才能保證每個物品只用一次。</p></div>
+
+      <h2>範例演示</h2>
+      <p>容量 5，物品 (重量, 價值)：(1,1)、(2,6)、(3,10)。一維 <code>dp[c]</code> 每加入一個物品後：</p>
+<table><tr><th>加入</th><th>c=0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+<tr><td>(1,1)</td><td>0</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+<tr><td>(2,6)</td><td>0</td><td>1</td><td>6</td><td>7</td><td>7</td><td>7</td></tr>
+<tr><td>(3,10)</td><td>0</td><td>1</td><td>6</td><td>10</td><td>11</td><td class="hl">16</td></tr></table>
+
+      <h2>程式碼</h2>
+      <h3>爬樓梯與 0/1 背包（二維）</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    // 爬樓梯：一次走 1 或 2 階
+    int n = 10;
+    vector&lt;long long&gt; dp(n + 1);
+    dp[0] = 1; dp[1] = 1;
+    for (int i = 2; i &lt;= n; i++) dp[i] = dp[i - 1] + dp[i - 2];
+    cout &lt;&lt; dp[n] &lt;&lt; '\n';                    // 89
+
+    // 0/1 背包（二維，最直觀）
+    vector&lt;int&gt; w = {1, 2, 3}, v = {1, 6, 10};
+    int W = 5, m = w.size();
+    vector&lt;vector&lt;long long&gt;&gt; f(m + 1, vector&lt;long long&gt;(W + 1, 0));
+    for (int i = 1; i &lt;= m; i++)
+        for (int c = 0; c &lt;= W; c++) {
+            f[i][c] = f[i - 1][c];                                    // 不拿
+            if (c &gt;= w[i - 1])
+                f[i][c] = max(f[i][c], f[i - 1][c - w[i - 1]] + v[i - 1]); // 拿
+        }
+    cout &lt;&lt; f[m][W] &lt;&lt; '\n';                  // 16
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>爬樓梯</td><td>O(n)</td></tr>
+        <tr><td>0/1 背包時間</td><td>O(nW)</td></tr>
+        <tr><td>背包空間（二維 → 一維）</td><td>O(nW) → O(W)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>一維背包正著枚舉容量</strong>：同一個物品會被拿很多次，變成「完全背包」。</li>
+          <li><strong>初始值錯</strong>：求最大價值時 <code>dp</code> 初始為 0；若要求「剛好裝滿」，除了 <code>dp[0]</code> 外要設成負無限大。</li>
+          <li><strong>沒先定義狀態就寫轉移</strong>：一定先用一句中文說清楚 <code>dp[i]</code> 代表什麼。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="13-dp-knapsack"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/climbing-stairs/">LeetCode 70 Climbing Stairs</a> — 入門 DP</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/partition-equal-subset-sum/">LeetCode 416 Partition Equal Subset Sum</a> — 0/1 背包變形</li>
+        <li><span class="badge medium">中等</span><a href="https://cses.fi/problemset/task/1158">CSES 1158 Book Shop</a> — 標準 0/1 背包</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>DP 五步驟：狀態、轉移、初始、順序、答案。</li>
+          <li>0/1 背包：拿或不拿取最大值。</li>
+          <li>一維寫法容量倒著枚舉。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>

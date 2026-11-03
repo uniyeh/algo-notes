@@ -3,6 +3,7 @@ title: 時間複雜度 Complexity
 type: concept
 tags: [觀念]
 related: [binary-search, prefix-sum, bfs]
+lesson: 04-cpp-basics
 updated: 2026-11-03
 ---
 

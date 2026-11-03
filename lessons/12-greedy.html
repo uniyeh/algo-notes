@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>貪婪 Greedy | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="12-greedy" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>貪婪 Greedy</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解貪婪法（Greedy）：每一步選當下最好的。</li>
+          <li>能用「交換論證」說服自己貪婪是對的。</li>
+          <li>熟悉區間排程、分配類的經典模型。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>貪婪法每一步都做局部最佳選擇，並且不回頭。它很快，但<strong>不一定正確</strong>，所以要能說出理由：常用的是交換論證——如果最佳解不是這樣選，把它換成貪婪的選擇不會變差。</p>
+<div class="callout"><p>區間排程：<strong>按結束時間排序</strong>，能選就選。結束越早，留給後面的空間越多。</p></div>
+
+      <h2>範例演示</h2>
+      <p>區間 [1,3]、[2,5]、[3,4]、[5,7]，按結束時間排序後：</p>
+<table><tr><th>區間</th><th>開始 ≥ 上次結束？</th><th>選擇</th><th>上次結束</th></tr>
+<tr><td>[1,3]</td><td>是</td><td>選</td><td>3</td></tr>
+<tr><td>[3,4]</td><td>3 ≥ 3 是</td><td>選</td><td>4</td></tr>
+<tr><td>[2,5]</td><td>2 ≥ 4 否</td><td>跳過</td><td>4</td></tr>
+<tr><td>[5,7]</td><td>5 ≥ 4 是</td><td>選</td><td class="hl">共 3 場</td></tr></table>
+
+      <h2>程式碼</h2>
+      <h3>分配餅乾與跳躍遊戲</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    // 分配餅乾：用最小的餅乾滿足胃口最小的孩子
+    vector&lt;int&gt; g = {1, 2, 3}, s = {1, 1};
+    sort(g.begin(), g.end());
+    sort(s.begin(), s.end());
+    int child = 0;
+    for (int c : s)
+        if (child &lt; (int)g.size() &amp;&amp; c &gt;= g[child]) child++;
+    cout &lt;&lt; child &lt;&lt; '\n';                     // 1
+
+    // 跳躍遊戲：維護目前能到的最遠位置
+    vector&lt;int&gt; a = {2, 3, 1, 1, 4};
+    int far = 0;
+    bool ok = true;
+    for (int i = 0; i &lt; (int)a.size(); i++) {
+        if (i &gt; far) { ok = false; break; }    // 走不到 i
+        far = max(far, i + a[i]);
+    }
+    cout &lt;&lt; (ok ? "YES" : "NO") &lt;&lt; '\n';       // YES
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>排序</td><td>O(n log n)</td></tr>
+        <tr><td>掃描</td><td>O(n)</td></tr>
+        <tr><td>空間</td><td>O(1)（不含輸入）</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>沒證明就貪</strong>：例如找零錢用「先拿最大面額」在 {1, 3, 4} 湊 6 會得到 4+1+1，但最佳是 3+3，這時要用 DP。</li>
+          <li><strong>區間按開始時間排序</strong>：一個很早開始但很晚結束的區間會擋住所有人。</li>
+          <li><strong>相等邊界</strong>：題目允許「結束 = 開始」時用 <code>&gt;=</code>，不允許時用 <code>&gt;</code>。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="12-greedy"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/assign-cookies/">LeetCode 455 Assign Cookies</a> — 兩邊都排序</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/jump-game/">LeetCode 55 Jump Game</a> — 最遠可達</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/non-overlapping-intervals/">LeetCode 435 Non-overlapping Intervals</a> — 按結束時間排序</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>貪婪 = 每步局部最佳、不回頭。</li>
+          <li>用交換論證或反例檢查正確性。</li>
+          <li>區間排程：按結束時間排序，能選就選。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>

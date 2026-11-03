@@ -8,30 +8,36 @@
   const root = body.dataset.root || "./";
   const LEVEL_NAME = { 1: "入門", 2: "進階", 3: "挑戰" };
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const num = (id) => id.slice(0, 2);
+  const CHAPTERS = window.CHAPTERS || [...new Set(LESSONS.map((l) => l.category))];
+  // 關卡編號 = 閱讀順序（lessons.js 陣列位置），與檔名流水號無關
+  const num = (id) => String(LESSONS.findIndex((l) => l.id === id) + 1).padStart(2, "0");
 
-  // ---------- 吉祥物：像素海豹「噗噗」（側躺，26×12） ----------
+  // ---------- 吉祥物：海豹寶寶「噗噗」（白色豎琴海豹幼崽，側躺，36×16） ----------
   const SEAL = [
-    "..........................",
-    "....OOOOO.................",
-    "..OOGGGGGOO...............",
-    ".OGGGGKWGGGO..............",
-    ".OGGGGKKGGGGOOOOOOOO......",
-    "OGPGGGGGGGGGGGGGGGGGOOO.OO",
-    "NLLGGGGGGGGGGGGGGGGGGGGOGO",
-    "OLLLGGGGGGGGGGGGGGGGGGGGO.",
-    ".OLLLLGGGGGGGGGGGGGGGGOGGO",
-    "..OOLLLLLLLLLLLLLLLLLO.OO.",
-    "....OOGGGOOOOOOOOOOOO.....",
-    "......OOO.................",
+    "......OOOOOOO.......................",
+    "....OOWWWWWWWOO.....................",
+    "...OWWWWWWWWWWWOOOOOOOO.............",
+    "..OWWWWWWWWWWWWWWWWWWWWOOO..........",
+    ".OWWWWWWWWWWWWWWWWWWWWWWWWOO........",
+    ".OWWKKWWWWWWKKWWWWWWWWWWWWWWO.......",
+    "OWWKHKKWWWWKHKKWWWWWWWWWWWWWWO......",
+    "OWWKKKKWWWWKKKKWWWWWWWWWWWWWWCO.....",
+    "OWWWKKWWWWWWKKWWWWWWWWWWWWWWWCO..OO.",
+    "OPPWWWWWNNWWWWPPWWWWWWWWWWWWWCCOOFFO",
+    "OWWWWDWNWWNWDWWWWWWWWWWWWWWWCCCOFFO.",
+    ".OWWWWWWWWWWWWWWWWWWWWWWWWCCCCCOFO..",
+    "..OCWWWWWWWWWWWWWWWWWWWWCCCCCCOOFFO.",
+    "...OCCWWFFWWWWWWWWWWWCCCCCCCCOOFFFO.",
+    "....OOCFFFOOCCCCCCCCCCCCCCCOOO.OOO..",
+    "......OOOO.OOOOOOOOOOOOOOOO.........",
   ];
-  const PAL = { O: "#1a2340", G: "#a9bfd6", L: "#e9f1f8", K: "#0b0d18", W: "#ffffff", P: "#ff9eb5", N: "#0b0d18" };
+  const PAL = { O: "#2a3150", W: "#ffffff", C: "#d6e0ee", K: "#10121f", H: "#ffffff", N: "#3a3048", P: "#ffb3c7", F: "#9aa8bd", D: "#96a0b9" };
   function sealSVG() {
     let r = "";
     SEAL.forEach((row, y) => [...row].forEach((c, x) => {
       if (PAL[c]) r += `<rect x="${x}" y="${y}" width="1" height="1" fill="${PAL[c]}"/>`;
     }));
-    return `<svg viewBox="0 0 26 12" shape-rendering="crispEdges" aria-label="像素海豹噗噗">${r}</svg>`;
+    return `<svg viewBox="0 0 36 16" shape-rendering="crispEdges" aria-label="像素海豹噗噗">${r}</svg>`;
   }
   window.sealSVG = sealSVG;
 
@@ -125,7 +131,7 @@
         <p class="side-h">QUESTS</p>
         <ul class="quests">${LESSONS.map((l) => `
           <li class="${lessonDone(l.id, p) ? "done" : ""}">
-            <a href="${root}lessons/${l.id}.html" class="${l.id === currentId ? "current" : ""}">
+            <a href="${root}lessons/${l.id}.html" class="${l.id === currentId ? "current" : ""}" title="${esc(l.category)}">
               <span class="mark">${lessonDone(l.id, p) ? "★" : "☆"}</span>${num(l.id)} ${esc(l.title)}</a></li>`).join("")}
         </ul>
       </div>
@@ -142,23 +148,42 @@
 
   // ---------- 首頁 ----------
   document.querySelectorAll("[data-sprite]").forEach((el) => (el.innerHTML = sealSVG()));
+  // 首頁：依章節分組、可折疊（<details>），展開狀態記在 localStorage
+  const OPEN_KEY = "algo-notes-open-chapters";
+  function openSet() { try { return new Set(JSON.parse(localStorage.getItem(OPEN_KEY)) || [CHAPTERS[0]]); } catch { return new Set([CHAPTERS[0]]); } }
   function renderCatalog() {
     const catalog = document.getElementById("catalog");
     if (!catalog) return;
     const p = load();
-    const groups = {};
-    LESSONS.forEach((l) => (groups[l.category] ||= []).push(l));
-    catalog.innerHTML = Object.entries(groups).map(([cat, list]) => `
-      <h2>// ${esc(cat)}</h2>
-      <div class="grid">${list.map((l) => `
+    const opened = openSet();
+    const card = (l) => `
         <a class="card" href="lessons/${l.id}.html">
           ${lessonDone(l.id, p) ? '<span class="stamp">CLEAR</span>' : ""}
           <div class="num">STAGE ${num(l.id)} <span class="level">· ${LEVEL_NAME[l.level] || ""} · +${problemsOf(l.id).length * 10} XP</span></div>
           <h3>${esc(l.title)}</h3>
           <p>${esc(l.summary)}</p>
           <div class="tags">${l.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>
-        </a>`).join("")}
-      </div>`).join("");
+        </a>`;
+    catalog.innerHTML = `
+      <div class="catalog-head"><h2>// 刷題總目錄</h2>
+        <button class="btn ghost toggle-all" type="button">全部展開</button></div>
+      ${CHAPTERS.map((cat, i) => {
+        const list = LESSONS.filter((l) => l.category === cat);
+        const done = list.filter((l) => lessonDone(l.id, p)).length;
+        return `<details class="chapter" data-chapter="${esc(cat)}" ${opened.has(cat) ? "open" : ""}>
+          <summary><span class="ch-no">CH ${String(i + 1).padStart(2, "0")}</span>
+            <span class="ch-name">${esc(cat)}</span>
+            <span class="ch-count ${list.length && done === list.length ? "full" : ""}">${list.length ? `<span class="star">★</span> ${done}/${list.length}` : "即將開放"}</span></summary>
+          <div class="grid">${list.map(card).join("") || '<p class="empty">噗噗還在準備這一章…</p>'}</div>
+        </details>`;
+      }).join("")}`;
+    const all = [...catalog.querySelectorAll("details.chapter")];
+    const saveOpen = () => { try { localStorage.setItem(OPEN_KEY, JSON.stringify(all.filter((d) => d.open).map((d) => d.dataset.chapter))); } catch {} };
+    const btn = catalog.querySelector(".toggle-all");
+    const syncBtn = () => (btn.textContent = all.every((d) => d.open) ? "全部收合" : "全部展開");
+    all.forEach((d) => d.addEventListener("toggle", () => { saveOpen(); syncBtn(); }));
+    btn.onclick = () => { const open = !all.every((d) => d.open); all.forEach((d) => (d.open = open)); };
+    syncBtn();
   }
   renderCatalog();
 

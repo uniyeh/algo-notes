@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>鏈結串列 Linked List | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="05-linked-list" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>鏈結串列 Linked List</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解鏈結串列（Linked List）與陣列的差異。</li>
+          <li>能用指標寫出插入、刪除、反轉。</li>
+          <li>學會競程常用的「陣列模擬鏈結串列」。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>陣列在記憶體中連續排列，中間插入要把後面全部往後搬，O(n)。鏈結串列每個節點記住「下一個是誰」，插入、刪除只要改幾個指標，O(1)；代價是不能用索引直接跳到第 k 個。</p>
+<div class="callout"><p>需要「頻繁在中間插入／刪除」而且「手上已經有那個節點」時，鏈結串列才有優勢。</p></div>
+
+      <h2>範例演示</h2>
+      <p>串列 <code>1 → 2 → 3</code>，在 2 後面插入 7，再刪除 1：</p>
+<table><tr><th>步驟</th><th>操作</th><th>串列</th></tr>
+<tr><td>0</td><td>初始</td><td>1 → 2 → 3</td></tr>
+<tr><td>1</td><td><code>nxt[7]=nxt[2]</code>, <code>nxt[2]=7</code></td><td>1 → 2 → <span class="hl">7</span> → 3</td></tr>
+<tr><td>2</td><td><code>nxt[head]=nxt[1]</code></td><td>2 → 7 → 3</td></tr></table>
+
+      <h2>程式碼</h2>
+      <h3>指標版：反轉鏈結串列（LeetCode 常見）</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+struct ListNode {
+    int val;
+    ListNode *next;
+    ListNode(int v) : val(v), next(nullptr) {}
+};
+
+ListNode* reverseList(ListNode* head) {
+    ListNode *prev = nullptr, *cur = head;
+    while (cur) {
+        ListNode *nxt = cur-&gt;next;   // 先存下一個，否則改完指標就找不到了
+        cur-&gt;next = prev;
+        prev = cur;
+        cur = nxt;
+    }
+    return prev;
+}
+
+int main() {
+    ListNode *head = nullptr, *tail = nullptr;
+    for (int v : {1, 2, 3, 4}) {
+        ListNode *node = new ListNode(v);
+        if (!head) head = tail = node;
+        else tail = tail-&gt;next = node;
+    }
+    for (ListNode *p = reverseList(head); p; p = p-&gt;next) cout &lt;&lt; p-&gt;val &lt;&lt; ' ';
+    cout &lt;&lt; '\n';
+}</code></pre>
+
+      <h3>陣列模擬版：雙向鏈結串列（競程常用）</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+const int N = 200005;
+int L[N], R[N];          // L[x]、R[x]：x 左右的節點，0 當作頭尾哨兵
+
+void insertAfter(int x, int y) {  // 在 x 右邊插入 y
+    R[y] = R[x]; L[y] = x;
+    L[R[x]] = y; R[x] = y;
+}
+void erase(int x) {
+    R[L[x]] = R[x];
+    L[R[x]] = L[x];
+}
+
+int main() {
+    R[0] = L[0] = 0;               // 空串列：哨兵自己接自己
+    insertAfter(0, 1);
+    insertAfter(1, 2);
+    insertAfter(2, 3);
+    erase(2);
+    for (int x = R[0]; x != 0; x = R[x]) cout &lt;&lt; x &lt;&lt; ' ';   // 1 3
+    cout &lt;&lt; '\n';
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>插入／刪除（已知節點）</td><td>O(1)</td></tr>
+        <tr><td>找第 k 個</td><td>O(n)</td></tr>
+        <tr><td>空間</td><td>O(n)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>改指標順序錯</strong>：先把 <code>cur->next</code> 改掉，就再也找不到下一個節點；先用暫存變數存起來。</li>
+          <li><strong>忘記處理頭節點</strong>：刪除頭節點要特判，或用哨兵（dummy head）統一處理。</li>
+          <li><strong>存取空指標</strong>：迴圈條件寫 <code>while (cur)</code>，不要直接 <code>cur->next->next</code>。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="05-linked-list"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/reverse-linked-list/">LeetCode 206 Reverse Linked List</a> — 三個指標</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/design-linked-list/">LeetCode 707 Design Linked List</a> — 用 dummy head</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/linked-list-cycle-ii/">LeetCode 142 Linked List Cycle II</a> — 快慢指針</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>鏈結串列：插入刪除 O(1)，隨機存取 O(n)。</li>
+          <li>改指標前先暫存，善用哨兵節點。</li>
+          <li>競程用 <code>L[] / R[]</code> 陣列模擬最快最穩。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>

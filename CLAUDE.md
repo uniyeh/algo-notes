@@ -19,7 +19,7 @@
 algo-notes/
 ├── CLAUDE.md / AGENTS.md     # AI 規則（本文件）／入口
 ├── README.md                 # 給人看的說明
-├── index.html                # 首頁：關卡卡片（由 lessons.js 產生）
+├── index.html                # 首頁：13 章可折疊刷題總目錄（由 lessons.js 產生）
 ├── wiki.html                 # 知識庫檢視器：wiki.html?p=<slug>
 ├── raw/                      # ① 原始資料（人提供，AI 唯讀）
 ├── wiki/                     # ② LLM Wiki（AI 撰寫與維護的 Markdown）
@@ -31,7 +31,7 @@ algo-notes/
 │   └── NN-slug.html
 ├── assets/
 │   ├── style.css             # 全站唯一樣式表（像素暗色主題）
-│   ├── lessons.js            # 講義清單（唯一資料來源）
+│   ├── lessons.js            # 章節 CHAPTERS + 講義清單 LESSONS（唯一資料來源）
 │   ├── problems.js           # 練習題資料與測資雜湊
 │   ├── main.js               # 側欄、經驗值、吉祥物、目錄、上下篇
 │   └── judge.js              # 線上判題（Compiler Explorer）
@@ -46,11 +46,35 @@ algo-notes/
 
 | 東西 | 規則 | 例子 |
 |---|---|---|
-| 講義檔 | `lessons/NN-slug.html`，NN 兩位數流水號、不可重複或跳號 | `04-dfs.html` |
+| 講義檔 | `lessons/NN-slug.html`，NN 是兩位數**唯一流水號**（用下一個未使用的號碼），不代表閱讀順序 | `15-dfs.html` |
 | 講義 id | 檔名去掉 `.html` | `04-dfs` |
 | 練習題 id | 第一題 = 講義 id，第二題起加 `-2`、`-3` | `04-dfs`、`04-dfs-2` |
 | wiki 頁 | `wiki/<slug>.md`，英文小寫 kebab-case，**不加編號** | `wiki/dfs.md` |
 | raw 檔 | `raw/YYYY-MM-DD-主題.md` | `raw/2026-11-03-dfs-notes.md` |
+
+## 3.5 章節架構（刷題總目錄）
+
+內容依以下 13 章組織，順序固定，定義在 `assets/lessons.js` 的 `CHAPTERS`：
+
+| CH | 章節 | 代表主題（已完成 / 可擴充） |
+|---|---|---|
+| 01 | 前序 | 複雜度、C++ 競程模板 / STL 速查 |
+| 02 | 陣列 | 二分搜尋、前綴和與差分 / 螺旋矩陣 |
+| 03 | 鏈結串列 | 反轉、陣列模擬 / 找環、合併 |
+| 04 | 雜湊表 | Two Sum、次數統計 / 四數相加 |
+| 05 | 字串 | KMP / 反轉、Z 函數 |
+| 06 | 雙指針 | 夾逼、滑動視窗 / 三數之和 |
+| 07 | 堆疊與佇列 | 括號、逆波蘭、deque / 優先佇列 |
+| 08 | 二元樹 | 走訪、高度 / BST、LCA |
+| 09 | 回溯 | 排列、組合 / 子集、N 皇后 |
+| 10 | 貪婪 | 區間排程、跳躍 / 加油站 |
+| 11 | 動態規劃 | 爬樓梯、0/1 背包 / 完全背包、LIS、LCS |
+| 12 | 單調堆疊 | 下一個更大 / 最大矩形、接雨水 |
+| 13 | 圖論 | BFS / DFS、並查集、Dijkstra |
+
+- **閱讀順序 = `LESSONS` 陣列順序**：新講義插在所屬章節最後一篇之後，首頁、側欄、上一篇／下一篇都會跟著這個順序。
+- 頁面上顯示的 STAGE 編號是閱讀順序，自動計算，與檔名 NN 無關。
+- 不新增、刪除或重新排序章節，除非使用者明確要求。
 
 ## 4. 視覺風格（像素冰原主題）
 
@@ -67,7 +91,7 @@ algo-notes/
 | `--warn` / `--err` | 警告、錯誤判定 |
 
 - 字型：`--pixel`（DotGothic16，標題與 UI）、`--arcade`（Press Start 2P，英數標籤如 LV / STAGE）、`--font`（Noto Sans TC，內文）、`--mono`（程式碼）。
-- 吉祥物：**像素海豹「噗噗」**，側躺的橫向造型（頭朝左），26×12 像素圖定義在 `main.js` 的 `SEAL`。不要改成其他動物或使用外部圖片；可在文案中以噗噗的口吻出現（例如題目情境）。
+- 吉祥物：**海豹寶寶「噗噗」**——白色豎琴海豹幼崽，側躺橫向（頭朝左、臉朝前），大眼睛、粉紅臉頰、圓滾身體；36×16 像素圖定義在 `main.js` 的 `SEAL`。不要改成其他動物或使用外部圖片；可在文案中以噗噗的口吻出現（例如題目情境）。
 - 版面：左側玩家欄（固定），中間閱讀區最寬 `760px`，右側自動目錄；900px 以下側欄移到上方，手機不得出現水平捲動。
 
 ## 5. 經驗值系統
@@ -92,12 +116,12 @@ algo-notes/
 1. **先有 wiki**：確認 `wiki/<slug>.md` 已存在；沒有就先做 §10 的 Ingest。
 2. 複製 `lessons/_template.html` → `lessons/NN-slug.html`，改 `<title>`、`data-lesson`、`data-problem`。
 3. 依 §8 填寫 8 個固定段落，內容以 wiki 頁為依據並延伸成教學。
-4. 在 `assets/lessons.js` 依編號順序新增：
+4. 在 `assets/lessons.js` 的 `LESSONS` 中，插在**所屬章節的最後一篇之後**（`category` 必須是 `CHAPTERS` 之一）：
    ```js
-   { id: "NN-slug", wiki: "slug", title: "標題", category: "分類", level: 1~3, summary: "30 字內摘要", tags: ["標籤"] }
+   { id: "NN-slug", wiki: "slug", title: "標題", category: "章節名稱", level: 1~3, summary: "30 字內摘要", tags: ["標籤"] }
    ```
 5. 依 §9 建立練習題。
-6. 更新 wiki：頁面 frontmatter 加 `lesson: NN-slug`、`wiki/index.md` 標註講義編號、`wiki/log.md` 新增紀錄。
+6. 更新 wiki：頁面 frontmatter 加 `lesson: NN-slug`、在 `wiki/index.md` 對應章節下列出並標註講義編號、`wiki/log.md` 新增紀錄。
 7. 不需要手動改 `index.html`、側欄或其他講義——都由 JS 自動產生。
 
 ## 8. 講義內容格式（固定段落與順序）

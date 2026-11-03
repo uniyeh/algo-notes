@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>堆疊與佇列 Stack &amp; Queue | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="09-stack-queue" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>堆疊與佇列 Stack &amp; Queue</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解堆疊（Stack，後進先出）與佇列（Queue，先進先出）。</li>
+          <li>能用堆疊解括號匹配、運算式求值。</li>
+          <li>認識雙端佇列 <code>deque</code> 與滑動視窗最大值。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>堆疊像一疊盤子，只能從最上面拿放：<code>push</code>、<code>top</code>、<code>pop</code>。佇列像排隊，從尾端進、前端出。兩端都能進出的是 <code>deque</code>。</p>
+<p>只要問題有「最近的一個還沒處理完的東西」（例如最近一個左括號），就是堆疊的味道。</p>
+<div class="callout"><p>「配對最近的」→ 堆疊；「按到達順序處理」→ 佇列。</p></div>
+
+      <h2>範例演示</h2>
+      <p>檢查 <code>{[()]}</code>：</p>
+<table><tr><th>讀到</th><th>動作</th><th>堆疊（底 → 頂）</th></tr>
+<tr><td>{</td><td>push</td><td>{</td></tr>
+<tr><td>[</td><td>push</td><td>{ [</td></tr>
+<tr><td>(</td><td>push</td><td>{ [ (</td></tr>
+<tr><td>)</td><td>頂端是 ( → pop</td><td>{ [</td></tr>
+<tr><td>]</td><td>頂端是 [ → pop</td><td>{</td></tr>
+<tr><td>}</td><td>頂端是 { → pop</td><td class="hl">空 → 合法</td></tr></table>
+
+      <h2>程式碼</h2>
+      <h3>堆疊：逆波蘭表示法求值</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    vector&lt;string&gt; tokens = {"2", "1", "+", "3", "*"};   // (2 + 1) * 3
+    stack&lt;long long&gt; st;
+    for (auto &amp;tk : tokens) {
+        if (tk == "+" || tk == "-" || tk == "*" || tk == "/") {
+            long long b = st.top(); st.pop();            // 注意先彈出的是右運算元
+            long long a = st.top(); st.pop();
+            if (tk == "+") st.push(a + b);
+            else if (tk == "-") st.push(a - b);
+            else if (tk == "*") st.push(a * b);
+            else st.push(a / b);
+        } else st.push(stoll(tk));
+    }
+    cout &lt;&lt; st.top() &lt;&lt; '\n';                            // 9
+}</code></pre>
+
+      <h3>deque：滑動視窗最大值</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    vector&lt;int&gt; a = {1, 3, -1, -3, 5, 3, 6, 7};
+    int k = 3;
+    deque&lt;int&gt; dq;                    // 存索引，對應的值由大到小
+    for (int i = 0; i &lt; (int)a.size(); i++) {
+        while (!dq.empty() &amp;&amp; a[dq.back()] &lt;= a[i]) dq.pop_back();  // 比我小的永遠不會是答案
+        dq.push_back(i);
+        if (dq.front() &lt;= i - k) dq.pop_front();                    // 過期的移出視窗
+        if (i &gt;= k - 1) cout &lt;&lt; a[dq.front()] &lt;&lt; ' ';
+    }
+    cout &lt;&lt; '\n';                     // 3 3 5 5 6 7
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>push / pop / top</td><td>O(1)</td></tr>
+        <tr><td>括號匹配</td><td>O(n)</td></tr>
+        <tr><td>滑動視窗最大值</td><td>O(n)</td></tr>
+        <tr><td>空間</td><td>O(n)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>對空堆疊呼叫 <code>top()</code></strong>：未定義行為，常直接 RE；先檢查 <code>empty()</code>。</li>
+          <li><strong>彈出順序搞反</strong>：<code>a - b</code> 時先彈出的是 <code>b</code>。</li>
+          <li><strong>結束時沒檢查堆疊是否為空</strong>：<code>((</code> 每一步都沒錯，但最後還有剩，仍然不合法。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="09-stack-queue"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/valid-parentheses/">LeetCode 20 Valid Parentheses</a> — 括號匹配</li>
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/implement-queue-using-stacks/">LeetCode 232 Implement Queue using Stacks</a> — 兩個堆疊</li>
+        <li><span class="badge hard">困難</span><a href="https://leetcode.com/problems/sliding-window-maximum/">LeetCode 239 Sliding Window Maximum</a> — 單調 deque</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>堆疊 LIFO、佇列 FIFO、deque 兩端皆可。</li>
+          <li>配對最近的 → 堆疊。</li>
+          <li><code>top()</code> 前一定先確認不為空。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>

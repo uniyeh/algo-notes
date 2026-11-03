@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>雙指針 Two Pointers | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="08-two-pointers" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>雙指針 Two Pointers</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解雙指針（Two Pointers）把 O(n²) 降到 O(n) 的原理。</li>
+          <li>能寫出「左右夾逼」與「滑動視窗」兩種模板。</li>
+          <li>知道滑動視窗需要的單調條件。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>雙指針有兩種常見型態：</p>
+<ul><li><strong>左右夾逼</strong>：排序後一個從左、一個從右，依大小決定移哪邊（Two Sum、三數之和）。</li>
+<li><strong>滑動視窗（Sliding Window）</strong>：兩個指針都往右走，維護一段「合法」的連續區間。</li></ul>
+<div class="callout"><p>兩個指針都只往一個方向走，總共最多移動 2n 次，所以是 O(n)。</p></div>
+
+      <h2>範例演示</h2>
+      <p>排序陣列 <code>[1, 2, 4, 7, 11]</code> 找和為 9：</p>
+<table><tr><th>步驟</th><th>l</th><th>r</th><th>a[l]+a[r]</th><th>動作</th></tr>
+<tr><td>1</td><td>0</td><td>4</td><td>12 &gt; 9</td><td>r−−</td></tr>
+<tr><td>2</td><td>0</td><td>3</td><td>8 &lt; 9</td><td>l++</td></tr>
+<tr><td>3</td><td>1</td><td>3</td><td class="hl">9</td><td>找到 (2, 7)</td></tr></table>
+
+      <h2>程式碼</h2>
+      <h3>左右夾逼：排序後的 Two Sum</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    vector&lt;int&gt; a = {1, 2, 4, 7, 11};
+    int target = 9;
+    int l = 0, r = a.size() - 1;
+    while (l &lt; r) {
+        int s = a[l] + a[r];
+        if (s == target) { cout &lt;&lt; a[l] &lt;&lt; ' ' &lt;&lt; a[r] &lt;&lt; '\n'; break; }
+        if (s &lt; target) l++;       // 太小：只有左邊變大才有機會
+        else r--;                  // 太大：只有右邊變小才有機會
+    }
+}</code></pre>
+
+      <h3>滑動視窗：最長無重複字元子字串</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    string s = "abcabcbb";
+    vector&lt;int&gt; cnt(256, 0);
+    int best = 0;
+    for (int l = 0, r = 0; r &lt; (int)s.size(); r++) {
+        cnt[(unsigned char)s[r]]++;
+        while (cnt[(unsigned char)s[r]] &gt; 1)      // 視窗不合法就縮左邊
+            cnt[(unsigned char)s[l++]]--;
+        best = max(best, r - l + 1);
+    }
+    cout &lt;&lt; best &lt;&lt; '\n';                          // 3（"abc"）
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>左右夾逼</td><td>O(n)（不含排序）</td></tr>
+        <tr><td>滑動視窗</td><td>O(n)</td></tr>
+        <tr><td>空間</td><td>O(1) ~ O(字元集)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>陣列有負數還用滑動視窗求和</strong>：加入元素不一定讓和變大，單調性消失，視窗就不成立（要改用前綴和）。</li>
+          <li><strong>夾逼前沒排序</strong>：左右夾逼依賴排序後的大小關係。</li>
+          <li><strong>視窗長度差一</strong>：閉區間 <code>[l, r]</code> 長度是 <code>r - l + 1</code>。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="08-two-pointers"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/remove-element/">LeetCode 27 Remove Element</a> — 快慢指針</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/minimum-size-subarray-sum/">LeetCode 209 Minimum Size Subarray Sum</a> — 滑動視窗</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/3sum/">LeetCode 15 3Sum</a> — 固定一個再夾逼</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>左右夾逼：排序後依大小移動一邊。</li>
+          <li>滑動視窗：右邊擴張、不合法就縮左邊。</li>
+          <li>視窗求和需要元素皆為正（單調性）。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>

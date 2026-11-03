@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>字串匹配 KMP | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="07-kmp" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>字串匹配 KMP</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解暴力字串匹配為什麼會慢。</li>
+          <li>理解前綴函數（Prefix Function，又稱 next / failure 陣列）的意義。</li>
+          <li>能寫出 O(n + m) 的 KMP 搜尋。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>在文字 <var>t</var> 中找模式 <var>p</var>，暴力法每次失配就把 <var>p</var> 右移一格重來，最壞 O(nm)。KMP 的想法：失配時，已經比對成功的那段資訊不要浪費。</p>
+<p>前綴函數 <code>f[i]</code>：<code>p[0..i]</code> 中「既是前綴又是後綴」的最長長度（不含整段）。失配時把 <code>j</code> 跳到 <code>f[j-1]</code>，<var>t</var> 的指標永遠不後退。</p>
+<div class="callout"><p>KMP 的核心就是一句話：失配時，用 <code>f[]</code> 告訴你「模式最多可以保留多少」。</p></div>
+
+      <h2>範例演示</h2>
+      <p><code>p = "abaab"</code> 的前綴函數：</p>
+<table><tr><th>i</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+<tr><td>p[i]</td><td>a</td><td>b</td><td>a</td><td>a</td><td>b</td></tr>
+<tr><td>f[i]</td><td>0</td><td>0</td><td>1</td><td>1</td><td class="hl">2</td></tr></table>
+<p><code>f[4] = 2</code>：「abaab」的前綴 "ab" 與後綴 "ab" 相同。</p>
+
+      <h2>程式碼</h2>
+      <h3>前綴函數 + 搜尋</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+vector&lt;int&gt; prefixFunction(const string &amp;p) {
+    int m = p.size();
+    vector&lt;int&gt; f(m, 0);
+    for (int i = 1, j = 0; i &lt; m; i++) {
+        while (j &gt; 0 &amp;&amp; p[i] != p[j]) j = f[j - 1];   // 失配：退回次長的相同前後綴
+        if (p[i] == p[j]) j++;
+        f[i] = j;
+    }
+    return f;
+}
+
+int main() {
+    string t = "aabaabaab", p = "abaab";
+    vector&lt;int&gt; f = prefixFunction(p);
+    for (int i = 0, j = 0; i &lt; (int)t.size(); i++) {
+        while (j &gt; 0 &amp;&amp; t[i] != p[j]) j = f[j - 1];
+        if (t[i] == p[j]) j++;
+        if (j == (int)p.size()) {
+            cout &lt;&lt; "found at " &lt;&lt; i - j + 1 &lt;&lt; '\n';
+            j = f[j - 1];                              // 繼續找下一個（允許重疊）
+        }
+    }
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>建前綴函數</td><td>O(m)</td></tr>
+        <tr><td>搜尋</td><td>O(n)</td></tr>
+        <tr><td>空間</td><td>O(m)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>while 寫成 if</strong>：失配時可能要連續退好幾次，必須用 <code>while</code>。</li>
+          <li><strong>找到後沒有更新 j</strong>：<code>j</code> 會超出模式長度，要設成 <code>f[j-1]</code>。</li>
+          <li><strong>大量輸入用 <code>getline</code> 混 <code>cin</code></strong>：殘留換行字元造成讀錯，只讀單字時直接用 <code>cin</code>。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="07-kmp"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/">LeetCode 28 Find the Index of the First Occurrence</a> — KMP 模板</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/repeated-substring-pattern/">LeetCode 459 Repeated Substring Pattern</a> — 用 f 的最後一項</li>
+        <li><span class="badge medium">中等</span><a href="https://cses.fi/problemset/task/1753">CSES 1753 String Matching</a> — 大資料量</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>KMP：文字指標不後退，總共 O(n + m)。</li>
+          <li><code>f[i]</code> = 最長相同前後綴長度。</li>
+          <li>失配用 <code>while</code> 退，找到後 <code>j = f[j-1]</code>。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>

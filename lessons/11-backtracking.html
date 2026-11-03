@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>回溯 Backtracking | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="11-backtracking" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>回溯 Backtracking</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+          <li>理解回溯（Backtracking）就是「在決策樹上做 DFS」。</li>
+          <li>能寫出「做選擇 → 遞迴 → 撤銷選擇」的模板。</li>
+          <li>會用剪枝減少搜尋量。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>排列、組合、子集、N 皇后這類「列出所有可能」的題目，可以畫成一棵決策樹：每一層做一個選擇。回溯就是 DFS 走這棵樹，走到底就記錄答案，回來時把選擇撤銷。</p>
+<div class="callout"><p>模板三步：<code>path.push_back(選擇)</code> → <code>dfs(...)</code> → <code>path.pop_back()</code>。</p></div>
+
+      <h2>範例演示</h2>
+      <p>列出 <code>[1, 2, 3]</code> 的全排列，前幾步：</p>
+<table><tr><th>path</th><th>動作</th></tr>
+<tr><td>[1]</td><td>選 1</td></tr><tr><td>[1, 2]</td><td>選 2</td></tr>
+<tr><td>[1, 2, 3]</td><td class="hl">長度 3 → 輸出</td></tr>
+<tr><td>[1, 2]</td><td>撤銷 3</td></tr><tr><td>[1]</td><td>撤銷 2</td></tr>
+<tr><td>[1, 3]</td><td>改選 3 → 繼續</td></tr></table>
+
+      <h2>程式碼</h2>
+      <h3>全排列模板</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int n;
+vector&lt;int&gt; path;
+vector&lt;bool&gt; used;
+
+void dfs() {
+    if ((int)path.size() == n) {                 // 走到葉子：記錄答案
+        for (int x : path) cout &lt;&lt; x &lt;&lt; ' ';
+        cout &lt;&lt; '\n';
+        return;
+    }
+    for (int i = 1; i &lt;= n; i++) {
+        if (used[i]) continue;
+        used[i] = true; path.push_back(i);       // 做選擇
+        dfs();
+        used[i] = false; path.pop_back();        // 撤銷選擇
+    }
+}
+
+int main() {
+    n = 3;
+    used.assign(n + 1, false);
+    dfs();
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>全排列</td><td>O(n · n!)</td></tr>
+        <tr><td>組合 C(n, k)</td><td>O(k · C(n, k))</td></tr>
+        <tr><td>子集</td><td>O(n · 2ⁿ)</td></tr>
+        <tr><td>遞迴空間</td><td>O(n)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>忘記撤銷選擇</strong>：<code>path</code> 或 <code>used</code> 沒恢復，後面的分支全錯。</li>
+          <li><strong>組合題重複</strong>：組合要從 <code>start</code> 往後選，否則 [1,2] 和 [2,1] 會重複出現。</li>
+          <li><strong>沒剪枝</strong>：剩下的數字不夠湊滿 k 個時可以提早結束，例如 <code>i &lt;= n - (k - path.size()) + 1</code>。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <p>在下面寫程式並提交，全部測資通過就能獲得經驗值！</p>
+      <div class="judge" data-problem="11-backtracking"></div>
+      <h3>延伸練習</h3>
+      <ul class="problems">
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/combinations/">LeetCode 77 Combinations</a> — 從 start 開始選</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/permutations/">LeetCode 46 Permutations</a> — 本篇模板</li>
+        <li><span class="badge hard">困難</span><a href="https://leetcode.com/problems/n-queens/">LeetCode 51 N-Queens</a> — 記錄欄與斜線</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>回溯 = 在決策樹上 DFS。</li>
+          <li>做選擇 → 遞迴 → 撤銷選擇。</li>
+          <li>組合用 start 避免重複，剪枝砍掉不可能的分支。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/problems.js"></script>
+  <script src="../assets/main.js"></script>
+  <script src="../assets/judge.js"></script>
+</body>
+</html>
