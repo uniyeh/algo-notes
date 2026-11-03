@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>廣度優先搜尋 BFS | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="03-bfs" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>廣度優先搜尋 BFS</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+        <li>理解廣度優先搜尋（Breadth-First Search）「一層一層擴散」的順序。</li>
+        <li>能用佇列寫出鄰接串列版與網格版 BFS。</li>
+        <li>知道為什麼 BFS 能求<strong>無權圖</strong>最短路。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>從起點丟一顆石頭進水裡，漣漪一圈一圈往外擴。BFS 用佇列（Queue）實現：先進先出，保證距離為 <var>d</var> 的點全部處理完，才會處理距離 <var>d+1</var> 的點。</p>
+      <div class="callout"><p>每個點<strong>第一次被拜訪時</strong>的距離就是最短距離——所以「入隊時」就要標記 visited。</p></div>
+
+      <h2>範例演示</h2>
+      <p>圖：<code>1–2, 1–3, 2–4, 3–4, 4–5</code>，從 1 出發：</p>
+      <table>
+        <tr><th>步驟</th><th>取出</th><th>新加入的鄰居</th><th>佇列</th><th>dist</th></tr>
+        <tr><td>0</td><td>—</td><td>1</td><td>[1]</td><td>1:0</td></tr>
+        <tr><td>1</td><td>1</td><td>2, 3</td><td>[2, 3]</td><td>2:1, 3:1</td></tr>
+        <tr><td>2</td><td>2</td><td>4</td><td>[3, 4]</td><td>4:2</td></tr>
+        <tr><td>3</td><td>3</td><td>（4 已拜訪）</td><td>[4]</td><td>—</td></tr>
+        <tr><td>4</td><td>4</td><td>5</td><td>[5]</td><td class="hl">5:3</td></tr>
+        <tr><td>5</td><td>5</td><td>—</td><td>[]</td><td>結束</td></tr>
+      </table>
+
+      <h2>程式碼</h2>
+      <h3>鄰接串列版</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    int n, m;
+    cin &gt;&gt; n &gt;&gt; m;
+    vector&lt;vector&lt;int&gt;&gt; adj(n + 1);
+    for (int i = 0; i &lt; m; i++) {
+        int u, v;
+        cin &gt;&gt; u &gt;&gt; v;
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+    vector&lt;int&gt; dist(n + 1, -1);   // -1 同時代表「沒拜訪過」
+    queue&lt;int&gt; q;
+    dist[1] = 0;
+    q.push(1);
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        for (int v : adj[u]) {
+            if (dist[v] != -1) continue;
+            dist[v] = dist[u] + 1;     // 入隊時就標記，避免重複入隊
+            q.push(v);
+        }
+    }
+    for (int i = 1; i &lt;= n; i++) cout &lt;&lt; dist[i] &lt;&lt; " \n"[i == n];
+}</code></pre>
+
+      <h3>網格版（迷宮最短路）</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+const int dx[] = {1, -1, 0, 0}, dy[] = {0, 0, 1, -1};
+
+int main() {
+    int n, m;
+    cin &gt;&gt; n &gt;&gt; m;
+    vector&lt;string&gt; g(n);
+    for (auto &amp;row : g) cin &gt;&gt; row;      // '.' 可走、'#' 牆
+    vector&lt;vector&lt;int&gt;&gt; dist(n, vector&lt;int&gt;(m, -1));
+    queue&lt;pair&lt;int, int&gt;&gt; q;
+    dist[0][0] = 0;
+    q.push({0, 0});
+    while (!q.empty()) {
+        auto [x, y] = q.front(); q.pop();
+        for (int k = 0; k &lt; 4; k++) {
+            int nx = x + dx[k], ny = y + dy[k];
+            if (nx &lt; 0 || ny &lt; 0 || nx &gt;= n || ny &gt;= m) continue;
+            if (g[nx][ny] == '#' || dist[nx][ny] != -1) continue;
+            dist[nx][ny] = dist[x][y] + 1;
+            q.push({nx, ny});
+        }
+    }
+    cout &lt;&lt; dist[n - 1][m - 1] &lt;&lt; '\n';   // -1 表示走不到
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>時間（鄰接串列）</td><td>O(V + E)</td></tr>
+        <tr><td>時間（網格）</td><td>O(nm)</td></tr>
+        <tr><td>空間</td><td>O(V + E)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>出隊才標記</strong>：同一個點會被多次加入佇列，最壞變成指數級或 TLE。一定要<strong>入隊時</strong>標記。</li>
+          <li><strong>拿 BFS 做有權圖</strong>：邊權不同時 BFS 不保證最短，要改用 Dijkstra（邊權只有 0/1 可用 0-1 BFS）。</li>
+          <li><strong>網格邊界</strong>：先檢查 <code>nx, ny</code> 是否越界，再讀 <code>g[nx][ny]</code>。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://leetcode.com/problems/number-of-islands/">LeetCode 200 Number of Islands</a> — 網格 BFS 數連通塊</li>
+        <li><span class="badge medium">中等</span><a href="https://cses.fi/problemset/task/1193">CSES 1193 Labyrinth</a> — 最短路並輸出路徑</li>
+        <li><span class="badge hard">困難</span><a href="https://leetcode.com/problems/word-ladder/">LeetCode 127 Word Ladder</a> — 隱式圖 BFS</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>BFS = 佇列 + visited，一層一層擴散。</li>
+          <li>無權圖最短路首選 BFS，複雜度 O(V + E)。</li>
+          <li>入隊時標記，永遠不要出隊才標記。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/main.js"></script>
+</body>
+</html>

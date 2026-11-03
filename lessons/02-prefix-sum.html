@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>前綴和與差分 | 演算法講義</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
+</head>
+<body data-lesson="02-prefix-sum" data-root="../">
+  <div class="layout">
+    <article class="lesson">
+      <h1>前綴和與差分</h1>
+
+      <h2>學習目標</h2>
+      <ul>
+        <li>理解前綴和（Prefix Sum）如何把區間和查詢降到 O(1)。</li>
+        <li>能寫出一維與二維前綴和。</li>
+        <li>學會差分（Difference Array）處理大量區間加值。</li>
+      </ul>
+
+      <h2>核心觀念</h2>
+      <p>定義 <code>pre[i] = a[1] + … + a[i]</code>，且 <code>pre[0] = 0</code>。那麼區間 <code>[l, r]</code> 的和就是「前 r 個的和」減掉「前 l−1 個的和」。</p>
+      <div class="callout"><p><code>sum(l, r) = pre[r] − pre[l−1]</code>。差分則是前綴和的反運算：在 <code>d[l] += v</code>、<code>d[r+1] −= v</code>，最後做一次前綴和即可。</p></div>
+
+      <h2>範例演示</h2>
+      <p><code>a = [3, 1, 4, 1, 5]</code>（1-indexed），查詢 <code>sum(2, 4)</code>：</p>
+      <table>
+        <tr><th>i</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+        <tr><td>a[i]</td><td>—</td><td>3</td><td>1</td><td>4</td><td>1</td><td>5</td></tr>
+        <tr><td>pre[i]</td><td>0</td><td class="hl">3</td><td>4</td><td>8</td><td class="hl">9</td><td>14</td></tr>
+      </table>
+      <p><code>sum(2, 4) = pre[4] − pre[1] = 9 − 3 = 6</code>，驗算 1 + 4 + 1 = 6 ✓。</p>
+
+      <h2>程式碼</h2>
+      <h3>一維前綴和 + 差分</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    int n, q;
+    cin &gt;&gt; n &gt;&gt; q;
+    vector&lt;long long&gt; a(n + 1), pre(n + 1, 0);   // 和可能超過 int
+    for (int i = 1; i &lt;= n; i++) {
+        cin &gt;&gt; a[i];
+        pre[i] = pre[i - 1] + a[i];
+    }
+    while (q--) {
+        int l, r;
+        cin &gt;&gt; l &gt;&gt; r;
+        cout &lt;&lt; pre[r] - pre[l - 1] &lt;&lt; '\n';
+    }
+
+    // 差分：對 [l, r] 全部加 v，多次操作後一次還原
+    vector&lt;long long&gt; d(n + 2, 0);
+    auto add = [&amp;](int l, int r, long long v) { d[l] += v; d[r + 1] -= v; };
+    add(1, 3, 10);
+    add(2, 5, -2);
+    for (int i = 1; i &lt;= n; i++) {
+        d[i] += d[i - 1];                 // d[i] 變成第 i 格的總增量
+        cout &lt;&lt; a[i] + d[i] &lt;&lt; " \n"[i == n];
+    }
+}</code></pre>
+
+      <h3>二維前綴和</h3>
+<pre><code class="language-cpp">#include &lt;bits/stdc++.h&gt;
+using namespace std;
+
+int main() {
+    int n, m;
+    cin &gt;&gt; n &gt;&gt; m;
+    vector&lt;vector&lt;long long&gt;&gt; p(n + 1, vector&lt;long long&gt;(m + 1, 0));
+    for (int i = 1; i &lt;= n; i++)
+        for (int j = 1; j &lt;= m; j++) {
+            long long x; cin &gt;&gt; x;
+            // 上 + 左 − 重複算到的左上角
+            p[i][j] = x + p[i - 1][j] + p[i][j - 1] - p[i - 1][j - 1];
+        }
+    int x1, y1, x2, y2;
+    cin &gt;&gt; x1 &gt;&gt; y1 &gt;&gt; x2 &gt;&gt; y2;
+    cout &lt;&lt; p[x2][y2] - p[x1 - 1][y2] - p[x2][y1 - 1] + p[x1 - 1][y1 - 1] &lt;&lt; '\n';
+}</code></pre>
+
+      <h2>複雜度</h2>
+      <table class="complexity">
+        <tr><th>項目</th><th>複雜度</th></tr>
+        <tr><td>預處理</td><td>O(n)／二維 O(nm)</td></tr>
+        <tr><td>單次區間和查詢</td><td>O(1)</td></tr>
+        <tr><td>差分單次區間加值</td><td>O(1)，還原 O(n)</td></tr>
+        <tr><td>空間</td><td>O(n)</td></tr>
+      </table>
+
+      <h2>常見錯誤</h2>
+      <div class="callout warn">
+        <ul>
+          <li><strong>索引差一</strong>：用 1-indexed 並讓 <code>pre[0] = 0</code>，就不用特判 <code>l = 1</code>。</li>
+          <li><strong>溢位</strong>：<var>n</var> = 2×10⁵、值 10⁹ 時總和超過 int，前綴和一律用 <code>long long</code>。</li>
+          <li><strong>差分陣列開太小</strong>：會寫到 <code>d[r+1]</code>，要開 <code>n + 2</code>。</li>
+        </ul>
+      </div>
+
+      <h2>練習題</h2>
+      <ul class="problems">
+        <li><span class="badge easy">簡單</span><a href="https://cses.fi/problemset/task/1646">CSES 1646 Static Range Sum Queries</a> — 一維模板</li>
+        <li><span class="badge medium">中等</span><a href="https://leetcode.com/problems/subarray-sum-equals-k/">LeetCode 560 Subarray Sum Equals K</a> — 前綴和 + 雜湊表</li>
+        <li><span class="badge medium">中等</span><a href="https://cses.fi/problemset/task/1652">CSES 1652 Forest Queries</a> — 二維前綴和</li>
+      </ul>
+
+      <h2>重點回顧</h2>
+      <div class="callout tip">
+        <ul>
+          <li>「多次問區間和、陣列不變」→ 前綴和。</li>
+          <li>「多次區間加值、最後才問」→ 差分。</li>
+          <li>二維公式記「加上、加左、減左上」。</li>
+        </ul>
+      </div>
+    </article>
+    <aside class="toc"></aside>
+  </div>
+  <script src="../assets/lessons.js"></script>
+  <script src="../assets/main.js"></script>
+</body>
+</html>
