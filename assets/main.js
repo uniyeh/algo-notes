@@ -106,6 +106,25 @@
   // 讓 main 內的 script 不重複執行：script 已執行過，移動 DOM 不會再跑
 
   const currentId = body.dataset.lesson;
+  // 側欄關卡：依 13 章分組、可折疊；目前講義所在章節自動展開，否則展開第一個未通關的章節
+  function questTree(p) {
+    const cur = LESSONS.find((l) => l.id === currentId);
+    const firstTodo = CHAPTERS.find((c) => LESSONS.some((l) => l.category === c && !lessonDone(l.id, p)));
+    const openCh = cur ? cur.category : firstTodo;
+    return CHAPTERS.map((cat, i) => {
+      const list = LESSONS.filter((l) => l.category === cat);
+      const done = list.filter((l) => lessonDone(l.id, p)).length;
+      const full = list.length > 0 && done === list.length;
+      return `<details class="q-ch ${full ? "full" : ""}" ${cat === openCh ? "open" : ""}>
+        <summary><span class="q-no">${String(i + 1).padStart(2, "0")}</span><span class="q-name">${esc(cat)}</span>
+          <span class="q-count">${list.length ? `${done}/${list.length}` : "--"}</span></summary>
+        <ul class="quests">${list.map((l) => `
+          <li class="${lessonDone(l.id, p) ? "done" : ""}">
+            <a href="${root}lessons/${l.id}.html" class="${l.id === currentId ? "current" : ""}">
+              <span class="mark">${lessonDone(l.id, p) ? "★" : "☆"}</span>${num(l.id)} ${esc(l.title)}</a></li>`).join("")}
+        </ul></details>`;
+    }).join("");
+  }
   function renderSidebar() {
     const s = stats();
     const p = load();
@@ -129,11 +148,7 @@
       </div>
       <div>
         <p class="side-h">QUESTS</p>
-        <ul class="quests">${LESSONS.map((l) => `
-          <li class="${lessonDone(l.id, p) ? "done" : ""}">
-            <a href="${root}lessons/${l.id}.html" class="${l.id === currentId ? "current" : ""}" title="${esc(l.category)}">
-              <span class="mark">${lessonDone(l.id, p) ? "★" : "☆"}</span>${num(l.id)} ${esc(l.title)}</a></li>`).join("")}
-        </ul>
+        ${questTree(p)}
       </div>
       <button class="reset" type="button">重置進度</button>`;
     const reset = side.querySelector(".reset");
